@@ -4,9 +4,9 @@
 
 ## 5.1 Introduction
 
-This chapter interprets the findings in relation to the research problem and literature reviewed in Chapter 2. The study began from a practical tension. Multimodal fashion recommenders can rank visually and semantically compatible products, while language models can explain almost any selected item fluently. Neither capability ensures that the explanation describes the evidence that actually influenced the recommendation. The implemented system addresses this gap by storing the expert-rule component of the reranking decision and exposing that same trace to an explanation generator.
+This chapter interprets the findings in relation to the research problem and literature reviewed in Chapter 2. The study began from a practical tension. Multimodal fashion recommenders can rank visually and semantically compatible products, while language models can explain almost any selected item fluently. Neither capability ensures that the explanation describes the evidence that actually influenced the recommendation. The implemented system addresses this gap by storing the source-grounded fashion-rule component of the reranking decision and exposing that same trace to an explanation generator.
 
-The completed experiment supports a bounded and deliberately mixed conclusion. Expert-rule reranking materially changed rank order but did not improve conventional recommendation effectiveness relative to fused CLIP. When the exact five-rule trace was supplied during explanation generation, reranking-trace claim support increased by 21.02 percentage points and full-KB claim support increased by 21.40 points under complete-pair, case-clustered inference. Trace-supported claims per 100 words also increased by 1.60. The common-reference UIFR outcome was inconclusive because only 53 complete pairs were eligible. These results do not establish human preference, world-factual correctness, or faithful access to every internal computation of a neural ranker.
+The completed experiment supports a bounded and deliberately mixed conclusion. Fashion-rule reranking materially changed rank order but did not improve conventional recommendation effectiveness relative to fused CLIP. When the complete retained trace was supplied during explanation generation, reranking-trace claim support increased by 21.02 percentage points and full-KB claim support increased by 21.40 points under complete-pair, case-clustered inference. Trace-supported claims per 100 words also increased by 1.60. The common-reference UIFR outcome was inconclusive because only 53 complete pairs were eligible. These results do not establish human preference, world-factual correctness, or faithful access to every internal computation of a neural ranker.
 
 ## 5.2 Interpretation of recommendation findings
 
@@ -22,9 +22,9 @@ The final comparison remains deliberately modest. It evaluates frozen MiniLM tex
 
 Evidence reranking produced HR@10 of 0.225, NDCG@10 of 0.1145, and MRR of 0.1056, compared with 0.231, 0.1223, and 0.1144 for fused CLIP. It would therefore be incorrect to present the rule component as an accuracy improvement. Yet the component changed 26.5% of top recommendations, increased the selected item's evidence score by 0.1473 on average, and used 148 of the 200 rules at least once. Its effect was material and orthogonal to aggregate relevance.
 
-This finding exposes a limitation of evaluating an evidence-aware recommender only with hit rate or NDCG. If two methods have similar mean relevance but select different items, one may produce decisions that are easier to justify through an explicit knowledge source. Conversely, optimising evidence alignment can move a model away from the latent taste signal encoded in outfit co-occurrence. The present 0.75/0.25 reranker found a region where substantial reordering occurred without a statistically detectable effectiveness penalty, but the confidence intervals do not prove equivalence. A future non-inferiority design would require a predeclared margin and adequate power.
+This finding exposes a limitation of evaluating an evidence-aware recommender only with hit rate or NDCG. If two methods select different items, one may produce decisions that are easier to justify through an explicit knowledge source without ranking held-out positives more effectively. Conversely, optimising evidence alignment can move a model away from the latent taste signal encoded in outfit co-occurrence. The present 0.75/0.25 reranker produced substantial reordering and lower values on every reported aggregate metric than fused CLIP. The experiment did not include a predeclared non-inferiority margin, so it supports neither equivalence nor a claim of no effectiveness penalty.
 
-The 200-rule base also gives the symbolic component a clear boundary. It cannot represent every fashion relationship, and rules are generic prescriptions rather than candidate facts. Its contribution is not to replace CLIP with a full expert system. It provides a compact decision vocabulary that can participate in ranking and later be inspected.
+The 200-rule base also gives the symbolic component a clear boundary. It cannot represent every fashion relationship, and rules are generic prescriptions rather than candidate facts. Its contribution is not to replace CLIP with a comprehensive fashion ontology. It provides a compact experimental decision vocabulary that can participate in ranking and later be inspected.
 
 ## 5.3 Interpretation of explanation faithfulness
 
@@ -68,13 +68,13 @@ The three local generators remain a limited roster. Llama's 31 Rule-RAG terminal
 
 ## 5.6 The role of explanation length
 
-Both conditions were instructed to use at most 75 words. No-RAG averaged 52.84 words and Rule-RAG 60.55, a residual difference of 7.71 words under the shared instruction. The direction and size of the difference varied by generator. Length is therefore still a behavioural covariate, but it is no longer an imposed free-form-versus-capped contrast.
+Both conditions were instructed to use 45--75 words. Across accepted outputs, No-RAG averaged 62.10 words and Rule-RAG 64.83, a residual difference of 2.72 words under the shared contract. Length is therefore still a behavioural covariate, but it is not an imposed free-form-versus-capped contrast.
 
 The primary support outcomes are claim-level rates, and trace-supported-claim density is reported per 100 generated words. Rule-RAG's trace-density advantage therefore cannot be attributed solely to producing more text. Nevertheless, length remains a behavioural covariate: the trace and citation instructions are part of the intervention, and the completed study does not isolate their separate effects. A factorial design crossing evidence visibility with length instructions would estimate those effects more cleanly, but it would require a new generation and verification experiment and is outside the frozen thesis boundary.
 
 ## 5.7 Contributions of the research
 
-The first contribution is an end-to-end architecture that connects multimodal ranking to a reusable explanation trace. CLIP image and text representations support candidate retrieval; expert rules participate numerically in reranking; and the exact top-five contributions are stored before explanation generation. This avoids constructing “evidence” after the recommendation has already been chosen.
+The first contribution is an end-to-end architecture that connects multimodal ranking to a reusable explanation trace. CLIP image and text representations support candidate retrieval; curated fashion rules participate numerically in reranking; and the complete set of up to five retained contributions is stored before explanation generation. This avoids constructing “evidence” after the recommendation has already been chosen.
 
 The second contribution is a paired experimental design that locks recommendation identity. No-RAG and Rule-RAG explain the same item for the same user request and generator. Differences in explanation cannot be attributed to one condition receiving an easier or more compatible recommendation. This is a practical design pattern for evaluating explanation interventions in recommender systems.
 
@@ -96,7 +96,7 @@ The frozen CLIP pathway is not fine-tuned on the exact outfit-completion objecti
 
 ### 5.8.3 Rule-base coverage and semantics
 
-The 200 rules are curated, finite, and generic. Their provenance does not constitute empirical truth probabilities, and semantic retrieval can select a rule whose antecedent only partly matches the case. The trace faithfully records what the algorithm used, but the algorithm's rule choice can itself be questionable. Trace support rewards alignment with B, not correctness of B. Recommendation metrics partly evaluate the consequence, but do not validate individual rules.
+The 200 rules are manually curated, source-grounded, finite, and generic. Their provenance does not constitute independent professional certification or empirical truth probabilities, and semantic retrieval can select a rule whose antecedent only partly matches the case. The trace faithfully records what the algorithm used, but the algorithm's rule choice can itself be questionable. Trace support rewards alignment with B, not correctness of B. Recommendation metrics partly evaluate the consequence, but do not validate individual rules.
 
 ### 5.8.4 Automated evaluation
 
@@ -106,7 +106,7 @@ Evidence Overreach Rate was removed because the saved labels do not reliably dis
 
 ### 5.8.5 Generalisability and model dependence
 
-The three generators are quantised local models between 3.2B and 12.2B parameters. Greedy decoding improves reproducibility but does not represent common stochastic chat settings. The assessment model is also local and quantised. Results may differ for larger proprietary models, domain-fine-tuned generators, alternative RAG templates, or repeated stochastic samples. The tested categories cover common apparel groups but not dresses as an independent target, cosmetics, sizing, or personalised styling.
+The three generators are quantised local models between 8.0B and 13.9B parameters. Greedy decoding improves reproducibility but does not represent common stochastic chat settings. The assessment models are also local and quantised. Results may differ for larger proprietary models, domain-fine-tuned generators, alternative RAG templates, or repeated stochastic samples. The tested categories cover common apparel groups but not dresses as an independent target, cosmetics, sizing, or personalised styling.
 
 ### 5.8.6 Computational reporting
 
@@ -130,23 +130,23 @@ A second direction is improved machine evaluation. Additional independently trai
 
 Third, visual evidence could be added under a separate, explicit boundary. A verified attribute extractor could produce an image-evidence block C containing confidence-scored colour, pattern, and silhouette observations. Explanations could then cite A, B, or C. This would allow legitimate visual specificity while maintaining source provenance, provided that the extractor is evaluated against an attribute benchmark with calibrated thresholds.
 
-Fourth, the rule base could be evaluated and expanded. Experts could assess rule correctness, antecedent applicability, redundancy, and category gaps. Learned retrieval could be calibrated against labelled rule relevance, while counterfactual tests could remove or swap rules and observe ranking and explanation changes. Such interventions would more directly test dependence on specific evidence than the present trace-support measurements alone.
+Fourth, a future project could construct a dataset-grounded compatibility knowledge graph from an independent fashion dataset. It should preserve relation-level provenance and statistically estimated compatibility relations, remain separate from the recommendation benchmark used for evaluation, and distinguish observations from inferred edges. That resource could support KG-supervised recommendation, controlled rule-retrieval ablations, and conventional compatibility-prediction or fill-in-the-blank validation. The same selected evidence could then be carried into explanation. This is a proposed extension, not a component or result of the completed experiment.
 
 Fifth, recommendation evaluation could move beyond sampled co-occurrence through temporal hold-outs, larger catalogue pools, stronger compatibility objectives, and calibrated fusion. A future comparison should evaluate general and fashion-domain encoders at their own validation-selected weights, with the same split and candidate protocol. User-centred evaluation remains outside the scope of the present automated thesis.
 
-Finally, efficiency should become a first-class outcome. Prospective profiling could record tokens, joules, latency percentiles, GPU memory, and operation counts for each stage. Smaller generators or extractive templates may recover most faithfulness benefits at lower cost. Because Rule-RAG outputs were shorter and faster in this experiment, evidence constraints may improve both reliability and efficiency, but a controlled throughput study is needed.
+Finally, efficiency should become a first-class outcome. Prospective profiling could record tokens, joules, latency percentiles, GPU memory, and operation counts for each stage. Smaller generators or extractive templates may recover most faithfulness benefits at lower cost. A controlled throughput study would be needed before claiming an efficiency benefit from evidence constraints.
 
 ## 5.11 Final conclusion
 
-This thesis developed and evaluated an evidence-constrained multimodal fashion recommendation framework in which the explanation can be linked to the exact expert rules used by the reranker. The system combined CLIP image and text representations, a curated 200-rule knowledge base, a frozen five-rule evidence trace, deterministic local language generation, and claim-level assessment.
+This thesis developed and evaluated an evidence-constrained multimodal fashion recommendation framework in which the explanation can be linked to the exact fashion rules used by the reranker. The system combined CLIP image and text representations, a curated 200-rule knowledge base, a frozen retained evidence trace of up to five rules, deterministic local language generation, and claim-level assessment.
 
-The recommendation experiment showed that fused CLIP produced the strongest conventional top-five and top-ten effectiveness among the tested methods. Adding expert evidence changed ranking substantially but did not improve effectiveness relative to fused CLIP. The explanation experiment showed that Rule-RAG increased exact-trace support, full-KB support, and trace-supported claim density under the same locked recommendation and common context.
+The recommendation experiment showed that fused CLIP produced the strongest conventional top-five and top-ten effectiveness among the tested methods. Adding curated fashion evidence changed ranking substantially but did not improve effectiveness relative to fused CLIP. The explanation experiment showed that Rule-RAG increased exact-trace support, full-KB support, and trace-supported claim density under the same locked recommendation and common context.
 
 The study did not show a reliable UIFR advantage, because only 53 complete pairs were eligible and the interval crossed zero. Citation syntax was also not treated as a positive integrity result: a citation requires claim--rule entailment. These findings narrow, rather than erase, the contribution. Trace exposure improves auditable evidence grounding under the frozen evaluator; it is neither a universal claim of factual correctness nor sufficient evidence of complete faithfulness to a neural model.
 
 The study also shows why careful terminology matters. No-RAG agreement with hidden rules is not grounding. Unsupported by supplied evidence is not factually false. A citation is not valid merely because it is present. A faithful explanation of an evidence-aware decision does not prove that the decision is more accurate. Preserving these distinctions turns an otherwise persuasive demonstration into a defensible experiment.
 
-The final evidence therefore supports a specific claim: within the frozen tested system, exposing the exact five-rule recommendation trace produced explanations with substantially stronger trace and full-KB claim support, and greater trace-supported-claim density, without improving recommendation accuracy. UIFR was inconclusive, and citation syntax was not accepted as citation entailment. The architecture, controls, cross-model verification, negative findings, and reproducible artifacts provide a credible basis for evaluating evidence-grounded recommendation explanations without conflating plausibility, trace compatibility, and provenance.
+The final evidence therefore supports a specific claim: within the frozen tested system, exposing the exact retained recommendation trace produced explanations with substantially stronger trace and full-KB claim support, and greater trace-supported-claim density, while the reranker did not improve recommendation accuracy. UIFR was inconclusive, and citation syntax was not accepted as citation entailment. The architecture, controls, cross-model verification, negative findings, and reproducible artifacts provide a credible basis for evaluating evidence-grounded recommendation explanations without conflating plausibility, trace compatibility, and provenance.
 
 This conclusion is deliberately useful rather than maximal. It gives a recommender-system designer a concrete, testable pattern: retain the evidence that participates in a symbolic decision component, pass that exact artifact to the explanatory interface, and assess generated claims against it with explicit source boundaries. It also gives a researcher clear conditions for challenging the result: change the rule base, the candidate-pool regime, the generator set, the verifier, or the evidence packet, and report the corresponding effects rather than assuming that a citation or fluent rationale is faithful by default.
 
@@ -166,6 +166,6 @@ This conclusion is deliberately useful rather than maximal. It gives a recommend
 
 [7] Ji, Z. et al. (2023) ‘Survey of hallucination in natural language generation’, *ACM Computing Surveys*, 55(12), Article 248. https://doi.org/10.1145/3571730.
 
-[8] Doshi-Velez, F. and Kim, B. (2017) ‘Towards a rigorous science of interpretable machine learning’, arXiv:1702.08608.
+[8] Doshi-Velez, F. and Kim, B. (2017) ‘Towards a rigorous science of interpretable machine learning’, arXiv:1702.08608. https://arxiv.org/abs/1702.08608.
 
 [9] Chia, P.J. et al. (2022) ‘Contrastive language and vision learning of general fashion concepts’, *Scientific Reports*, 12, 18958. https://doi.org/10.1038/s41598-022-23052-9.

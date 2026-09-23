@@ -9,6 +9,7 @@ import urllib.request
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
+from urllib.error import HTTPError, URLError
 
 from .grounding_contracts import require_trace_applicability, validate_generated_explanation
 
@@ -165,15 +166,25 @@ class OllamaClient:
             method="POST",
         )
         started = time.perf_counter()
-        with urllib.request.urlopen(
-            request,
-            timeout=(
-                float(timeout_seconds)
-                if timeout_seconds is not None
-                else float(self.defaults["timeout_seconds"])
-            ),
-        ) as response:
-            result = json.loads(response.read().decode("utf-8"))
+        try:
+            with urllib.request.urlopen(
+                request,
+                timeout=(
+                    float(timeout_seconds)
+                    if timeout_seconds is not None
+                    else float(self.defaults["timeout_seconds"])
+                ),
+            ) as response:
+                result = json.loads(response.read().decode("utf-8"))
+        except HTTPError as error:
+            detail = error.read().decode("utf-8", errors="replace")[:500]
+            raise RuntimeError(
+                f"Ollama request failed for model {model!r} with HTTP {error.code}: {detail}"
+            ) from error
+        except URLError as error:
+            raise RuntimeError(
+                f"Could not reach Ollama for model {model!r} at {self.endpoint}: {error.reason}"
+            ) from error
         return GenerationResult(
             text=str(result["response"]).strip(),
             latency_seconds=time.perf_counter() - started,

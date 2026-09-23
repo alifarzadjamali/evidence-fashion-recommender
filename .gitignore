@@ -8,7 +8,6 @@ __pycache__/
 .coverage
 htmlcov/
 .venv/
-archive/
 
 # Local runtime data: raw datasets, model caches, and embedding arrays stay outside Git.
 .runtime/

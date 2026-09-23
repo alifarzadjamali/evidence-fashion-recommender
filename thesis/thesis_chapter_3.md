@@ -4,17 +4,17 @@
 
 ## 3.1 Introduction
 
-This chapter describes the research design, implementation, and evaluation procedure used to investigate evidence-constrained multimodal fashion recommendation. The central methodological problem was not simply to produce a plausible recommendation. It was to separate three questions that are often conflated: whether a multimodal ranker retrieves compatible items; whether expert evidence materially participates in the ranking decision; and whether a natural-language explanation is faithful to the stored decision trace without adding unverified product attributes. The experiment was therefore organised as a staged, frozen pipeline. Earlier stages prepared the data, representations, candidate pools, and rule base; validation-only stages fixed every tunable choice; the confirmatory recommendation experiment then locked one recommendation and its exact five-rule trace for each case; and the explanation experiment compared two texts for the same locked decision.
+This chapter describes the research design, implementation, and evaluation procedure used to investigate evidence-constrained multimodal fashion recommendation. The central methodological problem was not simply to produce a plausible recommendation. It was to separate three questions that are often conflated: whether a multimodal ranker retrieves compatible items; whether source-grounded fashion evidence materially participates in the ranking decision; and whether a natural-language explanation is faithful to the stored decision trace without adding unverified product attributes. The experiment was therefore organised as a staged, frozen pipeline. Earlier stages prepared the data, representations, candidate pools, and rule base; validation-only stages fixed every tunable choice; the confirmatory recommendation experiment then locked one recommendation and its exact retrieved-rule trace for each case; and the explanation experiment compared two texts for the same locked decision.
 
-The design follows a paired-comparison principle. For each explanation case, common context A contained the request, query-item text and identity, and locked recommended-item text and identity. Exact trace B contained the five rules that contributed to the frozen evidence score. The No-RAG generator received A alone. The Rule-RAG generator received A and B, while recommendation identity was held constant. This intervention isolates access to the decision trace at the explanation stage. It does not isolate every possible effect of prompt wording or output length, and it does not turn the No-RAG condition into a grounded explanation when its text happens to agree with B. Accordingly, B agreement in No-RAG is post-hoc alignment, whereas Rule-RAG support is evidence-grounded because B was visible during generation.
+The design follows a paired-comparison principle. For each explanation case, common context A contained the request, query-item text and identity, and locked recommended-item text and identity. Exact trace B contained the eligible rules, up to the configured maximum of five, that contributed to the frozen evidence score. The No-RAG generator received A alone. The Rule-RAG generator received A and B, while recommendation identity was held constant. This intervention isolates access to the decision trace at the explanation stage. It does not isolate every possible effect of prompt wording or output length, and it does not turn the No-RAG condition into a grounded explanation when its text happens to agree with B. Accordingly, B agreement in No-RAG is post-hoc alignment, whereas Rule-RAG support is evidence-grounded because B was visible during generation.
 
 The work is an offline systems experiment rather than a user study. Recommendation relevance comes from co-occurrence within held-out Polyvore outfits. Explanation assessment uses Qwen 3.5 to extract atomic claims and Phi-4 to verify their relationship to the exact trace, the full KB packet, common reference evidence, and citations. Deterministic post-processing derives support rates and trace-supported-claim density from saved records. These are operational measures for this study, not universal benchmarks. No human or independent external audit is included in the final experimental boundary, so the automated evaluation is treated as system-level evidence with explicit limitations.
 
 ## 3.2 Research questions and experimental logic
 
-The methodology addresses four linked research questions. RQ1 asks whether making the exact expert-rule trace visible during generation improves support by the actual reranking trace and by the final KB packet. RQ2 asks whether the same intervention changes the rate of eligible concrete item-fact claims that are unsupported by a common reference packet. RQ3 asks whether syntactically present Rule-RAG citations are entailed by the cited rules at claim level. RQ4 asks whether the primary support effects remain directionally stable across the three generators and five target categories.
+The methodology addresses four linked research questions. RQ1 asks whether making the exact fashion-rule trace visible during generation improves support by the actual reranking trace and by the final KB packet. RQ2 asks whether the same intervention changes the rate of eligible concrete item-fact claims that are unsupported by a common reference packet. RQ3 asks whether syntactically present Rule-RAG citations are entailed by the cited rules at claim level. RQ4 asks whether the primary support effects remain directionally stable across the three generators and five target categories.
 
-The causal contrast is deliberately narrow. For case \(q\), let \(r_q\) be the recommendation locked in Stage 2, \(A_q\) the common case context, and \(B_q\) the exact five-rule reranking trace. For generator \(g\), the two outputs are
+The causal contrast is deliberately narrow. For case \(q\), let \(r_q\) be the recommendation locked in Stage 2, \(A_q\) the common case context, and \(B_q\) the exact retrieved-rule trace. For generator \(g\), the two outputs are
 
 \[
 \begin{aligned}
@@ -24,11 +24,11 @@ E^{\mathrm{RuleRAG}}_{qg} &= G_g(A_q,B_q).
 \tag{3.1}
 \]
 
-Both outputs explain the same \(r_q\). The paired elements are the case, locked recommendation, generator, decoding configuration, and common context. The intervention is the availability of \(B_q\): Rule-RAG receives the exact trace and associated grounding instruction, whereas No-RAG does not. Both conditions receive the same at-most-75-word instruction. The contrast therefore identifies the effect of trace-grounded prompting, while recognising that the evidence and citation instructions are part of that intervention. Claim outcomes are reported as rates and, where appropriate, per 100 generated words.
+Both outputs explain the same \(r_q\). The paired elements are the case, locked recommendation, generator, decoding configuration, and common context. The intervention is the availability of \(B_q\): Rule-RAG receives the exact trace and associated grounding instruction, whereas No-RAG does not. Both conditions receive the same 45--75-word instruction. The contrast therefore identifies the effect of trace-grounded prompting, while recognising that the evidence and citation instructions are part of that intervention. Claim outcomes are reported as rates and, where appropriate, per 100 generated words.
 
 Equation (3.1) is not intended to claim that the generator has access to hidden neural states. It formalises the visible-information boundary of the experiment. The recommendation is already fixed before either call, and \(B_q\) is a recorded symbolic artifact rather than a newly retrieved explanatory document. This ordering is what permits a comparison of explanation grounding without conflating it with a change in the recommendation itself.
 
-The study does not claim that B is a complete account of a neural model’s internal computation. B is instead the exact, inspectable symbolic trace used by the evidence component of the deployed reranker. The term “decision trace” is thus architectural and operational: it identifies the five expert rules, their similarities, reliability weights, ordering, and contributions used to compute the evidence score. Faithfulness is measured relative to that trace. This boundary follows the distinction in explainable-AI research between a convincing rationale and an account tied to the mechanism being explained [1,2].
+The study does not claim that B is a complete account of a neural model’s internal computation. B is instead the exact, inspectable symbolic trace used by the evidence component of the deployed reranker. The term “decision trace” is thus architectural and operational: it identifies the retained fashion rules, their similarities, ordering, and contributions used to compute the evidence score. Faithfulness is measured relative to that trace. This boundary follows the distinction in explainable-AI research between a convincing rationale and an account tied to the mechanism being explained [1,2].
 
 ## 3.3 Staged research design and freezing policy
 
@@ -36,7 +36,7 @@ The final project was implemented in five frozen stages. Stage 1 performed prefl
 
 Freezing served two purposes. First, it prevented test performance from influencing model weights, fusion weights, evidence weights, pool size, rule count, or prompts. Second, it preserved a stable provenance chain. Each major artifact was written once, bound to a SHA-256 digest, and named in a stage manifest. Model identifiers were accompanied by immutable revisions or local model digests. Configuration objects were canonicalised and hashed. Stage 5 derived all final analysis from the saved Stage 1--4 records and made zero new model calls.
 
-The final confirmatory settings were fixed before Stage 2: image/text CLIP fusion was 0.40/0.60; evidence reranking was CLIP/evidence 0.75/0.25; exactly five expert rules contributed to each trace; and the primary candidate pool contained approximately 100 candidates. Larger pools were validation sensitivity settings rather than alternative primary estimates. Generator identities, decoding settings, Rule-RAG prompt form, and claim schemas were frozen before full generation. The authorised verifier-contract correction is separately recorded in final provenance and binds the release to the actual Stage-4 prompt hash.
+The final confirmatory settings were fixed before Stage 2: image/text CLIP fusion was 0.40/0.60; evidence reranking was CLIP/evidence 0.75/0.25; up to five eligible rules contributed to each trace; and the primary candidate pool contained approximately 100 candidates. Larger pools were validation sensitivity settings rather than alternative primary estimates. Generator identities, decoding settings, Rule-RAG prompt form, and claim schemas were frozen before full generation. The authorised verifier-contract correction is separately recorded in final provenance and binds the release to the actual Stage-4 prompt hash.
 
 ## 3.4 Data source, unit of analysis, and preprocessing
 
@@ -44,13 +44,13 @@ The final confirmatory settings were fixed before Stage 2: image/text CLIP fusio
 
 The data source was the `Marqo/polyvore` dataset at immutable revision `8c782ee447faf2d2a0402ac883cf07d3b3f43e1c`, configuration `default`, source split `data`, and fingerprint `9c97dc763773e2a2`. Polyvore-derived outfit data are widely used for fashion compatibility research because an outfit supplies a set of items curated to appear together [3,4]. The present study used only the raw item identifier, category, product text, outfit association, and image. Textual explanation evidence was intentionally limited: images entered the recommendation representation but were never captioned, classified, or converted into attributes for A or B.
 
-The raw pinned source contained 94,096 items and 21,587 outfits. A validated mapping assigned items to the five final target categories: bags, bottoms, outerwear, shoes, and tops. Subsequent leakage resolution and confirmatory eligibility produced the prepared universe recorded in the final manifests. Differences between intermediate preparation counts are stage-specific and are not used as confirmatory results.
+The pinned source contained 94,096 raw item rows. The validated five-category mapping retained 47,872 eligible items across 19,094 outfits: bags, bottoms, outerwear, shoes, and tops. These prepared counts, rather than intermediate raw-dataset counts, define the frozen split and the confirmatory experiment.
 
 ### 3.4.2 Outfit-disjoint splitting
 
-The outfit, not the item row, was the primary split unit. Outfit IDs were ordered by SHA-256 over a fixed seed and assigned to exact quotas of 15,267 development outfits, 3,147 validation outfits, and 3,173 test outfits. This procedure is deterministic and prevents items from the same outfit appearing on opposite sides of the research split. Within the test partition, case selection used a separate seeded SHA-256 order and sampled 200 cases for each broad category, producing 1,000 confirmatory recommendation cases.
+The outfit, not the item row, was the primary split unit. Outfit IDs were ordered by SHA-256 over a fixed seed and assigned to exact quotas of 13,365 development outfits, 2,864 validation outfits, and 2,865 test outfits. This procedure is deterministic and prevents items from the same outfit appearing on opposite sides of the research split. Within the test partition, case selection used a separate seeded SHA-256 order and sampled 200 cases for each broad category, producing 1,000 confirmatory recommendation cases.
 
-Exact duplicate images were audited by hashing image bytes. Twenty-one duplicate groups were identified, of which eleven crossed an initial research split. Outfits connected by shared exact-image hashes were treated as connected components. Each cross-split component was moved to the split of its lowest seeded-hash anchor; singleton outfits were then moved in a separate deterministic order to restore the original quotas. Thirteen outfits changed assignment in total: eleven duplicate-linked moves and two rebalancing moves. The final split retained its exact quotas and contained no cross-split outfit or exact-image leakage. This is stricter than relying on unique item IDs, because separately identified catalogue rows can still carry identical visual content.
+Exact duplicate images were audited by hashing image bytes. Eighteen duplicate groups were identified, of which nine crossed the initial research split. Outfits connected by shared exact-image hashes were treated as connected components. Each cross-split component was moved to the split of its lowest seeded-hash anchor; singleton outfits were then moved in a separate deterministic order to restore the original quotas. Twelve outfits changed assignment in total: nine component reassignments and three quota-restoring reassignments. The final split retained its exact quotas and contained no cross-split outfit or exact-image leakage. This is stricter than relying on unique item IDs, because separately identified catalogue rows can still carry identical visual content.
 
 ### 3.4.3 Query construction and candidate pools
 
@@ -93,7 +93,7 @@ Fusion weights were examined on validation data only. The validation search esta
 
 The experiment records parameter counts, quantisation, device choices, token counts, latency, and model digests where available. It does not report floating-point operations (FLOPs). Accurate FLOP accounting for cached transformer embeddings and quantised Ollama generation would require kernel-level profiling, batch-shape accounting, and a definition of how integer/quantised operations are converted to FLOPs. Those counters were not captured during the frozen runs. A retrospective theoretical estimate would therefore create spurious precision and is not required for any effectiveness or faithfulness claim. The publication analysis itself made zero model calls.
 
-## 3.6 Expert rule base and exact decision trace
+## 3.6 Curated fashion rule base and exact decision trace
 
 ### 3.6.1 Knowledge-base construction
 
@@ -103,23 +103,24 @@ Rules express styling relationships rather than verified catalogue facts. Exampl
 
 ### 3.6.2 Rule retrieval and scoring
 
-For each query–candidate pair, the system created a textual representation from the user request, query group, candidate category, and item text. Candidate rules were first filtered by the requested recommendation category. Semantic similarity between the pair representation and rule text was calculated using normalised MiniLM vectors. A query-group bonus and a reliability weight were then applied. In simplified form, rule \(r\) received
+For each query–candidate pair, the system created a textual representation from the query category and text, user request, candidate category and text, and target category. Rules were filtered before scoring by recommendation category and by explicit applicability gates for query group, required context, query terms, and candidate terms. Semantic similarity between the pair representation and rule text was calculated using normalised `qwen3-embedding:0.6b` vectors. The final experiment assigned every retained rule the same weight and no category bonus. Rule \(r\) therefore received
 
 \[
-u(q,i,r)=\bigl(\cos(e_{q,i},e_r)+b(q,r)\bigr)w_{\mathrm{rel}}(r).
+u(q,i,r)=\cos(e_{q,i},e_r).
 \tag{3.4}
 \]
 
-where \(e_{q,i}\) is the candidate representation, \(e_r\) is the rule embedding, \(b\) is the documented query-group bonus, and \(w_{\mathrm{rel}}\) is the reliability multiplier. Rules were sorted by weighted contribution with stable rule-ID tie-breaking. The top \(k=5\) rules were retained.
+where \(e_{q,i}\) is the candidate representation and \(e_r\) is the rule embedding. Rules were sorted by contribution with stable rule-ID tie-breaking, and up to \(k=5\) eligible rules were retained. Fewer rules were retained when fewer than five passed the applicability gates; empty traces remained explicit zero-evidence cases and were not backfilled with merely similar rules.
 
-The candidate evidence score was the mean contribution of those five rules,
+For the retained set \(R_k(q,i)\), the candidate evidence score combined its maximum and mean contribution,
 
 \[
-s_E(q,i)=\frac{1}{5}\sum_{r\in R_5(q,i)}u(q,i,r).
+s_E(q,i)=0.7\max_{r\in R_k(q,i)}u(q,i,r)
++0.3\frac{1}{\lvert R_k(q,i)\rvert}\sum_{r\in R_k(q,i)}u(q,i,r).
 \tag{3.5}
 \]
 
-The stored trace included every element needed to reproduce this number: the candidate ID; representation hash; rules before and after category filtering; rules excluded and not selected; retrieval rank; similarity; reliability label and weight; query-group bonus; weighted contribution; and final evidence score. B is therefore not a later summary generated for the explanation model. It is the exact trace of the rules that participated in the reranking score.
+The stored trace included every element needed to reproduce this number: the candidate ID; representation hash; filter counts; retained rule IDs and texts; retrieval rank; similarity; the recorded equal weight and zero bonus; contribution; and final evidence score. B is therefore not a later summary generated for the explanation model. It is the exact trace of the rules that participated in the reranking score.
 
 ## 3.7 Evidence-aware reranking and recommendation locking
 
@@ -171,7 +172,7 @@ Five frozen confirmatory methods were compared: MiniLM text, CLIP image, CLIP te
 
 ### 3.8.2 Statistical inference
 
-Cases were not treated as fully independent when they shared a query outfit. Confidence intervals and paired contrasts therefore used the query outfit as the bootstrap cluster. For each of 5,000 replicates, complete query-outfit clusters were sampled with replacement, all their cases were retained, and the statistic was recomputed. The 2.5th and 97.5th percentiles formed a 95% interval [9]. Pairing occurred at case level because every method ranked the same candidate pool. The family of 28 predeclared primary method–metric contrasts was corrected using Holm’s sequential procedure [10]. The test-set analysis did not choose a weight, prompt, or model.
+Cases were not treated as fully independent when they shared a query outfit. Recommendation confidence intervals therefore used the query outfit as the bootstrap cluster. For each of 5,000 replicates, complete query-outfit clusters were sampled with replacement, all their cases were retained, and the statistic was recomputed. The 2.5th and 97.5th percentiles formed a 95% interval [9]. The released recommendation table reports percentile intervals for each method and metric; it does not report pairwise recommendation p-values or a multiple-comparison test. The test set was not used to choose a weight, prompt, or model.
 
 ## 3.9 Explanation-generation experiment
 
@@ -181,7 +182,7 @@ For every locked case, A contained the complete frozen common information made a
 
 ### 3.9.2 Exact trace B and conditions
 
-B contained the five-rule trace described in Section 3.6. It was byte-identical for both conceptual comparisons, although hidden from No-RAG generation. The No-RAG prompt asked for an explanation of why the locked item suited the request using A and imposed the same at-most-75-word instruction used by Rule-RAG. The Rule-RAG prompt displayed A and B in labelled blocks, ordered rules by weighted score, included rule IDs, reliability labels, and scores, required citations, and used the same numerical cap. A/B hashes were stored with every generation record. Thus word-budget assignment is controlled, although observed word counts and the additional Rule-RAG instructions are not identical.
+B contained the complete retained trace described in Section 3.6, with between one and five rules for the evidence-eligible explanation cases. It was hidden from No-RAG generation but retained in the frozen record for paired assessment. The No-RAG prompt asked for an explanation of why the locked item suited the request using A and imposed the same 45–75-word contract used by Rule-RAG. The Rule-RAG prompt displayed A and B, included rule IDs and rule text, required at least one exact trace citation, and used the same numerical limits. A/B hashes were stored with every generation record. Thus the word-budget assignment is controlled, although observed word counts and the additional Rule-RAG instructions are not identical.
 
 The No-RAG condition represents an unconstrained post-hoc rationale, not a condition with no information: it can use explicit product text in A. The Rule-RAG condition represents trace-assisted generation. A claim that restates an explicit material term from a product title may therefore be A-supported in either condition. A claim that follows a styling rule may be B-supported. A claim that invents “waterproof”, “premium leather”, or a definite instance-level colour match without such evidence is unsupported by the supplied evidence, but is not automatically factually false.
 
@@ -193,9 +194,9 @@ Five hundred locked, evidence-eligible cases were sampled from the final recomme
 
 ## 3.10 Validation-only configuration freezing
 
-Before the full run, validation-only sensitivity grids examined fusion, candidate-pool, and evidence-reranking settings. They were used to freeze an image/text mixture of 0.40/0.60, a CLIP/evidence mixture of 0.75/0.25, and five retrieved rules per candidate. The grids are reported as validation evidence rather than pooled with the confirmatory results; no final recommendation, explanation, extraction, or verification outcome was selected after observing the test results.
+Before the full run, validation-only sensitivity grids examined fusion and evidence-reranking settings. They were used to freeze an image/text mixture of 0.40/0.60, a CLIP/evidence mixture of 0.75/0.25, and a maximum of five retrieved rules per candidate. The grids are reported as validation evidence rather than pooled with the confirmatory results; no final recommendation, explanation, extraction, or verification outcome was selected after observing the test results.
 
-The final Rule-RAG configuration was also frozen before generation. It displayed five rules in weighted-score order with stable IDs, reliability labels, and contribution information; it asked the generator to cite rules where relevant and imposed the same at-most-75-word cap used in No-RAG. Validation work set this contract and the ranking settings, but no pilot outcome is combined with the final estimates. The confirmatory corpus is solely the 3,000 Stage-2 attempted cells and the frozen Stage-3 and Stage-4 assessments derived from accepted outputs.
+The final Rule-RAG configuration was also frozen before generation. It displayed the complete non-empty retained trace in score order with stable IDs and rule text; it required at least one exact trace citation and imposed the same 45–75-word limits used in No-RAG. Validation work set this contract and the ranking settings, but no pilot outcome is combined with the final estimates. The confirmatory corpus is solely the 3,000 Stage-2 attempted cells and the frozen Stage-3 and Stage-4 assessments derived from accepted outputs.
 
 ## 3.11 Atomic-claim extraction and verification
 
@@ -203,7 +204,7 @@ The final Rule-RAG configuration was also frozen before generation. It displayed
 
 The complete explanation, rather than a sentence sample, was passed to a frozen Qwen 3.5 9B extractor. The extractor enumerated independent atomic fashion or styling propositions, split independently checkable conjunctions, assigned sequential claim IDs, and applied the frozen claim schema. Extraction assessed neither truth nor support. Of 2,969 accepted explanations, 2,965 accepted extractions yielded 17,710 atomic claims; four terminal extraction failures were retained as missing records rather than repaired.
 
-Claim role was assigned deterministically after extraction. `item_type` claims were identity/context claims because they commonly state what item is being recommended. The other schema labels were treated as substantive because even simple categories such as colour and material can carry explanatory content. After verification eligibility, the study-specific layer contained 10,703 substantive No-RAG claims and 8,666 substantive Rule-RAG claims. N/A rows were retained in the 3,000-explanation accounting but did not receive invented claim labels.
+Claim role was assigned deterministically after extraction. `item_type` claims were identity/context claims because they commonly state what item is being recommended. The other schema labels were treated as substantive because even simple categories such as colour and material can carry explanatory content. Records that failed extraction or verification were retained as terminal failures and were not assigned invented claim labels.
 
 ### 3.11.2 Multi-source verification
 
@@ -280,7 +281,7 @@ For metric \(m\), the case-level contrast was
 \tag{3.15}
 \]
 
-where \(d_{qg}^{(m)}\) is the generator-specific paired difference and \(G_q\) is the set of complete generator pairs for case \(q\). Percentile 95% confidence intervals were obtained from 5,000 bootstrap resamples of case IDs. Holm correction was applied to the predeclared family of primary support, UIFR, and trace-density contrasts. Citation entailment is summarised descriptively for Rule-RAG because it has no No-RAG counterpart.
+where \(d_{qg}^{(m)}\) is the generator-specific paired difference and \(G_q\) is the set of complete generator pairs for case \(q\). Percentile 95% confidence intervals were obtained from 5,000 bootstrap resamples of case IDs. Holm correction [10] was applied to the predeclared family of primary support, UIFR, and trace-density contrasts. Citation entailment is summarised descriptively for Rule-RAG because it has no No-RAG counterpart.
 
 ## 3.14 Heterogeneity, robustness, and qualitative analysis
 
@@ -300,11 +301,11 @@ The implementation used Python 3.12 on Windows 11. Embedding and LLM stages were
 
 The study uses catalogue images and descriptions from a research dataset and makes no inference about protected personal attributes. It is not a safety-critical wardrobe adviser, product-authentication system, or factual catalogue service. Product text may be noisy, and outfit co-occurrence reflects platform curation rather than universal taste. Generated explanations must therefore be read as system outputs about supplied records, not authoritative fashion or product claims.
 
-Automated assessment presents a more important validity limitation. Qwen 3.5 9B extracts claims and Phi-4 14B verifies them; this separates claim construction from entailment but does not establish either model's semantic accuracy. The restricted UIFR definition improves source-boundary transparency but cannot resolve every mixed natural-language claim. No human ratings, independent external annotations, or partial-entailment audit are included. The strongest warranted conclusion is comparative: under this frozen system evaluator, access to the exact five-rule trace changes measured trace support, full-KB support, trace-supported-claim density, and citation-related provenance. It does not establish human preference, factual correctness in the world, or causal faithfulness to every internal neural computation.
+Automated assessment presents a more important validity limitation. Qwen 3.5 9B extracts claims and Phi-4 14B verifies them; this separates claim construction from entailment but does not establish either model's semantic accuracy. The restricted UIFR definition improves source-boundary transparency but cannot resolve every mixed natural-language claim. No human ratings, independent external annotations, or partial-entailment audit are included. The strongest warranted conclusion is comparative: under this frozen system evaluator, access to the exact retained trace changes measured trace support, full-KB support, trace-supported-claim density, and citation-related provenance. It does not establish human preference, factual correctness in the world, or causal faithfulness to every internal neural computation.
 
 ## 3.16 Chapter summary
 
-The methodology connects recommendation and explanation through a locked decision and an exact symbolic trace. Multimodal CLIP retrieval supplies the base ranking; a category-filtered expert rule base contributes an evidence score; validation-only selection freezes the fusion and reranking design; and the confirmatory evaluation quantifies both recommendation effectiveness and ranking change. The explanation experiment holds recommendation identity constant while varying access to B across three generators and five categories. Atomic claims, trace and full-KB support, common-reference UIFR, citation entailment, complete-pair inference, subgroup estimates, and frozen qualitative examples provide complementary views of the output.
+The methodology connects recommendation and explanation through a locked decision and an exact symbolic trace. Multimodal CLIP retrieval supplies the base ranking; a filtered, source-grounded fashion rule base contributes an evidence score; validation-only selection freezes the fusion and reranking design; and the confirmatory evaluation quantifies both recommendation effectiveness and ranking change. The explanation experiment holds recommendation identity constant while varying access to B across three generators and five categories. Atomic claims, trace and full-KB support, common-reference UIFR, citation entailment, complete-pair inference, subgroup estimates, and frozen qualitative examples provide complementary views of the output.
 
 The design’s principal strength is traceability. Every reported explanation is connected to a specific A packet, B trace, generator digest, locked candidate, claim list, and verification record. Its principal limitation is equally clear: the final thesis experiment stops at automated system evaluation. Chapter 4 therefore reports quantitative differences without treating them as independently human-validated truth.
 
@@ -340,8 +341,8 @@ Finally, interpretation followed pre-specified language rules. A claim labelled 
 
 [8] Järvelin, K. and Kekäläinen, J. (2002) ‘Cumulated gain-based evaluation of IR techniques’, *ACM Transactions on Information Systems*, 20(4), pp. 422–446. https://doi.org/10.1145/582415.582418.
 
-[9] Efron, B. and Tibshirani, R.J. (1993) *An Introduction to the Bootstrap*. New York: Chapman & Hall/CRC.
+[9] Efron, B. and Tibshirani, R.J. (1993) *An Introduction to the Bootstrap*. New York: Chapman & Hall/CRC. https://doi.org/10.1007/978-1-4899-4541-9.
 
-[10] Holm, S. (1979) ‘A simple sequentially rejective multiple test procedure’, *Scandinavian Journal of Statistics*, 6(2), pp. 65–70.
+[10] Holm, S. (1979) ‘A simple sequentially rejective multiple test procedure’, *Scandinavian Journal of Statistics*, 6(2), pp. 65–70. https://doi.org/10.2307/4615733.
 
 [11] Spearman, C. (1904) ‘The proof and measurement of association between two things’, *The American Journal of Psychology*, 15(1), pp. 72–101. https://doi.org/10.2307/1412159.

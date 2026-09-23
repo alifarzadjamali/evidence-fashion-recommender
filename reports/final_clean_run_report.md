@@ -4,9 +4,9 @@
 
 **EXPERIMENTAL PROJECT: CLOSED**
 
-This report documents the canonical final clean run of *Evidence-Constrained Multimodal Fashion Recommendation with Expert-Rule-Grounded Explanations*. It uses the frozen Stage 1–5 artifacts only. No model calls were made after Stage 4.
+This report documents the canonical final clean run of *Evidence-Constrained Multimodal Fashion Recommendation with Trace-Grounded Explanations*. It uses the frozen Stage 1–5 artifacts only. No model calls were made after Stage 4.
 
-The central result is that, under generator-specific complete-case pairing and case-clustered inference, supplying the exact expert-rule trace used by reranking increased both reranking-trace support and full-KB support of generated explanations.
+The central result is that, under generator-specific complete-case pairing and case-clustered inference, supplying the exact source-grounded fashion-rule trace used by reranking increased both reranking-trace support and full-KB support of generated explanations.
 
 ## Canonical result locations
 
@@ -123,9 +123,8 @@ Among the 16,804 verified claims:
 - Stage 2 → 3 → 4 joins were exact: 3,000 explanation records, 2,969 Stage-2 accepted explanation records, 2,965 Stage-3 accepted extraction records, and 2,861 Stage-4 accepted verification records.
 - Claim IDs were preserved exactly from extraction into every accepted verification record.
 - Exact trace hashes, full-KB candidate packet hashes, citation conventions, and the invariant `trace_support = supported ⇒ full_kb_support = supported` passed.
-- Final code quality checks passed: `ruff check .` and 55 tests.
+- Final code quality checks passed: `ruff check .` and 54 tests.
 
 ## Scope and limitations
 
 The conclusions are limited to the frozen dataset, five categories, sampled candidate pools, evidence-eligible explanation cases, the final 200-rule KB, and automated extraction/verification. The project does not claim access to hidden model reasoning, universal fashion correctness, full-catalogue production performance, or human preference superiority. Citation syntax and citation entailment are evaluated separately.
-

@@ -46,7 +46,7 @@ Data leakage is another concern. Item identifiers alone may not detect separatel
 
 Catalogue text can expose explicit product terms, while images capture appearance information missing from descriptions. CLIP learns aligned image and text representations from large-scale image-text training and supports zero-shot cross-modal transfer [8]. Its shared embedding space makes it a practical frozen baseline for multimodal catalogue retrieval. In the present system, normalised CLIP image and text vectors are fused before cosine ranking, while MiniLM provides a separate lightweight sentence-embedding pathway [9,10].
 
-The use of frozen general-purpose encoders has advantages and limitations. It permits a reproducible study without end-to-end fashion-model training and allows the research contribution to focus on evidence traces and explanation. However, CLIP is not specialised for outfit compatibility, fit, or subtle garment attributes. The thesis therefore treats its multimodal retrieval pathway as a reproducible baseline rather than assuming that it is the strongest possible fashion representation.
+The use of frozen general-purpose encoders has advantages and limitations. It permits a reproducible study without end-to-end fashion-model training and allows the research contribution to focus on evidence traces and explanation. However, CLIP is not specialised for outfit compatibility, fit, or subtle garment attributes. Recent work continues to develop attribute-augmented compatibility prediction [24] and fine-grained text-conditioned outfit generation and retrieval [25]. The present work does not seek to establish a new state-of-the-art outfit-compatibility architecture; it investigates the effect of explicit retrieved fashion evidence on recommendation decisions and faithful explanation. Its multimodal pathway is therefore treated as a reproducible baseline rather than the strongest possible fashion representation.
 
 The completed results support a bounded multimodal claim. Fused CLIP is the strongest tested pathway on the principal top-five and top-ten retrieval measures, while the evidence reranker produces a modest relevance trade-off in exchange for an inspectable symbolic trace. The literature therefore motivates multimodal representation, whereas the experiment reserves its main causal claim for the subsequent evidence-grounded explanation contrast.
 
@@ -54,7 +54,7 @@ The completed results support a bounded multimodal claim. Fused CLIP is the stro
 
 A critical distinction for this thesis is that an image embedding is a ranking signal, not a set of verified textual attributes. A similarity score may be affected by colour, silhouette, pattern, composition, or correlations that are not individually recoverable. Generating an explanation that states “the burgundy trousers match the leather shoes” would require evidence that the items are burgundy and leather. The fact that CLIP processed their images does not establish that these particular propositions were explicitly represented or causally decisive.
 
-The system therefore draws a strict evidence boundary. Images enter the recommendation pathway but are never captioned or classified into explanation facts. Common context A contains the user request and the frozen item identities, categories, and catalogue text. Exact trace B contains the five expert rules and scoring information used by the evidence component. A future image-evidence block could contain separately validated visual attributes, but such a component would require its own benchmark and uncertainty controls.
+The system therefore draws a strict evidence boundary. Images enter the recommendation pathway but are never captioned or classified into explanation facts. Common context A contains the user request and the frozen item identities, categories, and catalogue text. Exact trace B contains the complete retained set of source-grounded fashion rules and scoring information used by the evidence component. A future image-evidence block could contain separately validated visual attributes, but such a component would require its own benchmark and uncertainty controls.
 
 This boundary avoids an important category error in multimodal explanation. Visual grounding normally asks whether language corresponds to observable image content. Decision faithfulness asks whether language reflects information used in a prediction. These properties can overlap but are not interchangeable. The thesis evaluates faithfulness to B and support from A+B while acknowledging that B is only the symbolic portion of a hybrid score.
 
@@ -74,7 +74,7 @@ Post-hoc explanations are produced after a prediction and may approximate its ba
 
 Mechanism-linked approaches instead incorporate interpretable components into prediction. Policy-Guided Path Reasoning uses knowledge-graph paths to connect users and recommended items [14]. LOGER combines knowledge-graph embeddings with neural logic rules and uses learned rule importance to guide path reasoning for explainable recommendation [15]. These systems demonstrate that paths or rules can be part of recommendation rather than decoration added afterwards.
 
-The present work shares the goal of mechanism linkage but differs in architecture and question. It does not learn personalised logical rules over a user-item knowledge graph. It retrieves from a curated fashion-rule base, calculates a candidate evidence score from five weighted rule contributions, mixes that score with fused CLIP, and stores the exact contributing trace. It then experimentally tests what happens when a separate language generator can or cannot see that trace while recommendation identity remains locked.
+The present work shares the goal of mechanism linkage but differs in architecture and question. It does not learn personalised logical rules over a user-item knowledge graph. It filters a curated, source-grounded fashion-rule base, calculates a candidate evidence score from up to five eligible contributions, mixes that score with fused CLIP, and stores the exact contributing trace. It then experimentally tests what happens when a separate language generator can or cannot see that trace while recommendation identity remains locked.
 
 ### 2.4.3 Limits of symbolic evidence
 
@@ -92,7 +92,7 @@ RAG combines parametric generation with retrieved external information [16]. It 
 
 However, “retrieved,” “visible,” and “used” describe different relationships. A document can be retrieved but excluded from a prompt; it can be displayed but ignored by the generator; it can influence wording without having influenced item selection. Standard RAG commonly grounds the answer in visible context, but it does not necessarily connect that context to the upstream recommendation decision.
 
-This thesis uses the term Rule-RAG for the explanation condition because rules are retrieved and displayed to the generator. Its stronger architectural property is that the displayed five-rule trace is identical to the trace used in the evidence score for the locked item. Even so, the language generator is prompted rather than token-constrained. It remains capable of adding unsupported content, and the empirical citation results confirm that rule identifiers are not always attached correctly.
+This thesis uses the term Rule-RAG for the explanation condition because rules are retrieved and displayed to the generator. Its stronger architectural property is that the displayed retained trace is identical to the trace used in the evidence score for the locked item. Even so, the language generator is prompted rather than token-constrained. It remains capable of adding unsupported content, and the empirical citation results confirm that rule identifiers are not always attached correctly.
 
 ### 2.5.2 Hallucination, unsupportedness, and contradiction
 
@@ -116,7 +116,7 @@ The exact rule trace enables deterministic identifier validation and source-awar
 
 Jacovi and Goldberg [20] argue that faithfulness must be defined relative to a model and an explanation target. An explanation should correspond to the process it purports to describe rather than merely satisfy human expectations. Wiegreffe and Pinter [13] likewise show that debates about explanation require explicit claims and tests. Lyu et al. [21] organise faithful-explanation research into similarity-based, model-internal, gradient, counterfactual, and self-explaining approaches, illustrating that no single measure applies universally.
 
-For a hybrid recommender, the object of explanation must be stated precisely. The CLIP component produces a latent compatibility score; the rule component produces an auditable score from five contributions. B is a complete record of the latter but not the former. “Decision-trace faithfulness” in this thesis therefore means faithfulness to the symbolic evidence trace used within the decision, not full causal explanation of the hybrid model.
+For a hybrid recommender, the object of explanation must be stated precisely. The CLIP component produces a latent compatibility score; the rule component produces an auditable score from up to five eligible contributions. B is a complete record of the latter but not the former. “Decision-trace faithfulness” in this thesis therefore means faithfulness to the symbolic evidence trace used within the decision, not full causal explanation of the hybrid model.
 
 The No-RAG condition creates a useful comparison. A pretrained generator may mention concepts similar to hidden B because fashion rules are common cultural knowledge. Such agreement is evidence of post-hoc alignment, not grounding, because the generator did not receive B. This prevents a high baseline match rate from being misrepresented as evidence use.
 
@@ -140,7 +140,7 @@ Eligibility creates additional denominator differences. UIFR cannot be calculate
 
 Explanation length is a major design issue. Longer outputs create more opportunities to state unsupported attributes, while concise evidence-focused prompts may improve both density and readability. Normalising unsupported claims per 100 words reduces but does not remove this difference because evidence access and brevity can affect which claims are selected, not only how many words are produced.
 
-In the corrective experiment, both conditions received the same at-most-75-word instruction. No-RAG averaged 52.84 words and Rule-RAG 60.55; the remaining gap arose mainly from generator compliance, including 243 legacy Rule-RAG cap violations and two No-RAG violations. The predeclared 30-pair sensitivity averaged 54.17 versus 54.37 words with a 0.33-word mean absolute paired gap. Length is therefore controlled more directly than in the first draft, although evidence/citation instructions still change rhetorical content and actual length.
+Both final conditions received the same 45--75-word instruction. Across accepted outputs, No-RAG explanations averaged 62.10 words and Rule-RAG explanations averaged 64.83 words, a difference of 2.72 words. The shared contract reduces an obvious design asymmetry, but evidence and citation instructions can still affect rhetorical structure and realised length. The primary trace-support outcome is therefore complemented by trace-supported claims per 100 words.
 
 Evaluator independence is related but distinct. Using the same model family for extraction and verification can create correlated errors. The final run therefore uses Qwen 3.5 for atomic-claim extraction and Phi-4 for verification. This is stronger role separation, though neither model is human-calibrated. Cross-model assessment reduces one source of correlated error but does not substitute for annotation or establish semantic correctness.
 
@@ -167,6 +167,8 @@ Table 2.1 compares the main strands that lead to the thesis. The “remaining ga
 | Lyu et al. [21] | Faithful NLP explanation | Survey of more than 100 explanation approaches | Shows diversity of faithfulness definitions and tests | Does not itself provide metrics for unsupported fashion-item attributes or rule citations |
 | Saad-Falcon et al. [22] | Automated RAG evaluation | Synthetic training, lightweight judges, and calibrated estimation | Demonstrates scalable component-level RAG assessment | Automated judges remain estimator-dependent and do not replace explicit decision provenance |
 
+*Table 2.1. Representative research strands and the gap addressed by this thesis.*
+
 ### 2.7.2 Research gaps
 
 The comparison reveals four connected gaps. The first is a **decision-provenance gap**. Fashion rankers increasingly exploit visual, textual, categorical, and relational representations, but their natural-language explanations are often not connected to an exact artifact that participated in selecting the item. A readable account can therefore become a plausible reconstruction of latent compatibility.
@@ -179,7 +181,7 @@ The fourth is an **objective-separation gap**. Explainability mechanisms are som
 
 ### 2.7.3 How the thesis addresses the gap
 
-Chapter 3 responds with a staged architecture and evaluation design. First, it constructs deterministic outfit-disjoint and exact-image-leakage-resolved splits from a pinned Polyvore release. Second, it establishes MiniLM, CLIP image, CLIP text, and fused CLIP ranking pathways under controlled same-category candidate pools. Third, it retrieves five rules for every query-candidate pair, calculates an evidence score, combines that score with fused CLIP, and preserves the exact scoring trace.
+Chapter 3 responds with a staged architecture and evaluation design. First, it constructs deterministic outfit-disjoint and exact-image-leakage-resolved splits from a pinned Polyvore release. Second, it establishes MiniLM, CLIP image, CLIP text, and fused CLIP ranking pathways under controlled same-category candidate pools. Third, it filters and scores eligible rules for each query-candidate pair, retains up to five, calculates an evidence score, combines that score with fused CLIP, and preserves the exact scoring trace.
 
 Fourth, the selected recommendation is locked before language generation. The No-RAG and Rule-RAG conditions explain the same item for the same request and generator. Common context A is identical; Rule-RAG additionally receives trace B. Fifth, saved explanations are decomposed into claims and evaluated with source-aware automated schemas. Trace support distinguishes post-hoc agreement from grounding in visible B; full-KB support captures the broader rule packet; common-reference item-fact support remains a restricted secondary outcome; and citation entailment measures a claim--source relation rather than identifier presence. Generator and category analyses provide complementary robustness views.
 
@@ -197,21 +199,21 @@ The unresolved intersection concerns provenance: whether an inspectable evidence
 
 [2] Han, X., Wu, Z., Jiang, Y.-G. and Davis, L.S. (2017) ‘Learning fashion compatibility with bidirectional LSTMs’, *Proceedings of ACM Multimedia 2017*, pp. 1078–1086. https://doi.org/10.1145/3123266.3123394.
 
-[3] Vasileva, M.I., Plummer, B.A., Dusad, K., Rajpal, S., Kumar, R. and Forsyth, D. (2018) ‘Learning type-aware embeddings for fashion compatibility’, *Proceedings of ECCV 2018*, pp. 390–405.
+[3] Vasileva, M.I., Plummer, B.A., Dusad, K., Rajpal, S., Kumar, R. and Forsyth, D. (2018) ‘Learning type-aware embeddings for fashion compatibility’, *Proceedings of ECCV 2018*, pp. 390–405. https://www.ecva.net/papers/eccv_2018/papers_ECCV/html/Mariya_Vasileva_Learning_Type-Aware_Embeddings_ECCV_2018_paper.php.
 
-[4] Cucurull, G., Taslakian, P. and Vazquez, D. (2019) ‘Context-aware visual compatibility prediction’, *Proceedings of CVPR 2019*, pp. 12617–12626.
+[4] Cucurull, G., Taslakian, P. and Vazquez, D. (2019) ‘Context-aware visual compatibility prediction’, *Proceedings of CVPR 2019*, pp. 12617–12626. https://openaccess.thecvf.com/content_CVPR_2019/html/Cucurull_Context-Aware_Visual_Compatibility_Prediction_CVPR_2019_paper.html.
 
-[5] Tan, R., Vasileva, M.I., Saenko, K. and Plummer, B.A. (2019) ‘Learning similarity conditions without explicit supervision’, *Proceedings of ICCV 2019*, pp. 10373–10382.
+[5] Tan, R., Vasileva, M.I., Saenko, K. and Plummer, B.A. (2019) ‘Learning similarity conditions without explicit supervision’, *Proceedings of ICCV 2019*, pp. 10373–10382. https://doi.org/10.1109/ICCV.2019.01047.
 
-[6] Kang, W.-C., Kim, E., Leskovec, J., Rosenberg, C. and McAuley, J. (2019) ‘Complete the look: Scene-based complementary product recommendation’, *Proceedings of CVPR 2019*, pp. 10532–10541.
+[6] Kang, W.-C., Kim, E., Leskovec, J., Rosenberg, C. and McAuley, J. (2019) ‘Complete the look: Scene-based complementary product recommendation’, *Proceedings of CVPR 2019*, pp. 10532–10541. https://openaccess.thecvf.com/content_CVPR_2019/html/Kang_Complete_the_Look_Scene-Based_Complementary_Product_Recommendation_CVPR_2019_paper.html.
 
 [7] Järvelin, K. and Kekäläinen, J. (2002) ‘Cumulated gain-based evaluation of IR techniques’, *ACM Transactions on Information Systems*, 20(4), pp. 422–446. https://doi.org/10.1145/582415.582418.
 
-[8] Radford, A. et al. (2021) ‘Learning transferable visual models from natural language supervision’, *Proceedings of ICML 2021*, 139, pp. 8748–8763.
+[8] Radford, A. et al. (2021) ‘Learning transferable visual models from natural language supervision’, *Proceedings of ICML 2021*, 139, pp. 8748–8763. https://proceedings.mlr.press/v139/radford21a.html.
 
 [9] Reimers, N. and Gurevych, I. (2019) ‘Sentence-BERT: Sentence embeddings using Siamese BERT-networks’, *Proceedings of EMNLP-IJCNLP 2019*, pp. 3982–3992. https://doi.org/10.18653/v1/D19-1410.
 
-[10] Wang, W. et al. (2020) ‘MiniLM: Deep self-attention distillation for task-agnostic compression of pre-trained transformers’, *Advances in Neural Information Processing Systems*, 33, pp. 5776–5788.
+[10] Wang, W. et al. (2020) ‘MiniLM: Deep self-attention distillation for task-agnostic compression of pre-trained transformers’, *Advances in Neural Information Processing Systems*, 33, pp. 5776–5788. https://proceedings.neurips.cc/paper/2020/hash/3f5ee243547dee91fbd053c1c4a845aa-Abstract.html.
 
 [11] Zhang, Y. and Chen, X. (2020) ‘Explainable recommendation: A survey and new perspectives’, *Foundations and Trends in Information Retrieval*, 14(1), pp. 1–101. https://doi.org/10.1561/1500000066.
 
@@ -223,7 +225,7 @@ The unresolved intersection concerns provenance: whether an inspectable evidence
 
 [15] Zhu, Y., Xian, Y., Fu, Z., de Melo, G. and Zhang, Y. (2021) ‘Faithfully explainable recommendation via neural logic reasoning’, *Proceedings of NAACL 2021*, pp. 3083–3090. https://doi.org/10.18653/v1/2021.naacl-main.245.
 
-[16] Lewis, P. et al. (2020) ‘Retrieval-augmented generation for knowledge-intensive NLP tasks’, *Advances in Neural Information Processing Systems*, 33, pp. 9459–9474.
+[16] Lewis, P. et al. (2020) ‘Retrieval-augmented generation for knowledge-intensive NLP tasks’, *Advances in Neural Information Processing Systems*, 33, pp. 9459–9474. https://proceedings.neurips.cc/paper/2020/hash/6b493230205f780e1bc26945df7481e5-Abstract.html.
 
 [17] Ji, Z. et al. (2023) ‘Survey of hallucination in natural language generation’, *ACM Computing Surveys*, 55(12), Article 248. https://doi.org/10.1145/3571730.
 
@@ -238,3 +240,7 @@ The unresolved intersection concerns provenance: whether an inspectable evidence
 [22] Saad-Falcon, J., Khattab, O., Potts, C. and Zaharia, M. (2024) ‘ARES: An automated evaluation framework for retrieval-augmented generation systems’, *Proceedings of NAACL 2024*, pp. 338–354. https://doi.org/10.18653/v1/2024.naacl-long.20.
 
 [23] Chia, P.J. et al. (2022) ‘Contrastive language and vision learning of general fashion concepts’, *Scientific Reports*, 12, Article 18958. https://doi.org/10.1038/s41598-022-23052-9.
+
+[24] Li, Y., Yu, S., Chen, Y., Jiang, Y. and Yuan, K. (2024) ‘Explainable fashion compatibility prediction: An attribute-augmented neural framework’, *Electronic Commerce Research and Applications*, 68, Article 101451. https://doi.org/10.1016/j.elerap.2024.101451.
+
+[25] Zhai, W. et al. (2025) ‘Text2Outfit: Generating complete outfits from textual descriptions’, *Proceedings of ICCV 2025*, pp. 16165–16174. https://doi.org/10.1109/ICCV51701.2025.01500.

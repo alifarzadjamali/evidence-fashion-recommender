@@ -95,18 +95,46 @@ def rec_case_metrics(rankings: list[dict[str, Any]]) -> pd.DataFrame:
 def save_figure(path: Path, contrasts: list[dict[str, Any]]) -> None:
     import matplotlib.pyplot as plt
 
-    selected = [row for row in contrasts if row["scope"] == "overall"]
-    labels = [row["metric"] for row in selected]
-    values = [row["estimate"] * 100 for row in selected]
-    errors = [
-        [(row["estimate"] - row["ci_lower"]) * 100 for row in selected],
-        [(row["ci_upper"] - row["estimate"]) * 100 for row in selected],
+    selected = {row["metric"]: row for row in contrasts if row["scope"] == "overall"}
+    rate_metrics = [
+        ("trace_support_rate", "Trace support"),
+        ("full_kb_support_rate", "Full-KB support"),
+        ("unsupported_item_fact_rate", "Unsupported item facts"),
     ]
-    figure, axis = plt.subplots(figsize=(9, 4.5))
-    axis.bar(labels, values, color="#0072B2", yerr=errors, capsize=4)
-    axis.axhline(0, color="black", linewidth=0.8)
-    axis.set_ylabel("Rule-RAG − No-RAG (percentage points)")
-    axis.tick_params(axis="x", rotation=18)
+    density_metric = selected["trace_supported_claims_per_100_words"]
+
+    def error(row: dict[str, Any], scale: float) -> list[list[float]]:
+        return [
+            [(row["estimate"] - row["ci_lower"]) * scale],
+            [(row["ci_upper"] - row["estimate"]) * scale],
+        ]
+
+    figure, (rate_axis, density_axis) = plt.subplots(
+        1, 2, figsize=(10.5, 4.6), gridspec_kw={"width_ratios": [3, 1]}
+    )
+    for metric, label in rate_metrics:
+        row = selected[metric]
+        rate_axis.bar(
+            label,
+            row["estimate"] * 100,
+            color="#0072B2",
+            yerr=error(row, 100),
+            capsize=4,
+        )
+    rate_axis.axhline(0, color="black", linewidth=0.8)
+    rate_axis.set_ylabel("Rule-RAG − No-RAG (percentage points)")
+    rate_axis.tick_params(axis="x", rotation=12)
+
+    density_axis.bar(
+        "Trace-supported\nclaim density",
+        density_metric["estimate"],
+        color="#009E73",
+        yerr=error(density_metric, 1),
+        capsize=4,
+    )
+    density_axis.axhline(0, color="black", linewidth=0.8)
+    density_axis.set_ylabel("Difference in claims per 100 words")
+    figure.suptitle("Paired explanation contrasts with 95% clustered-bootstrap intervals")
     figure.tight_layout()
     figure.savefig(path.with_suffix(".svg"))
     figure.savefig(path.with_suffix(".png"), dpi=300)

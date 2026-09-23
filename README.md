@@ -1,14 +1,22 @@
 # Evidence-Constrained Multimodal Fashion Recommendation
 
-This repository implements the final clean experiment specified in [proposal.md](proposal.md).
-It evaluates controlled sampled-pool recommendation across `tops`, `bottoms`, `shoes`,
-`outerwear`, and `bags`, then tests whether explanations conditioned on the exact expert-rule
-trace used for reranking are more evidentially grounded.
+This repository contains the frozen experiment and thesis materials for a study of
+evidence-constrained multimodal fashion recommendation. It evaluates controlled sampled-pool
+recommendation across `tops`, `bottoms`, `shoes`, `outerwear`, and `bags`, then tests whether
+explanations conditioned on the exact source-grounded fashion-rule trace used for reranking are
+more evidentially grounded.
 
-The sole active knowledge base is `data/kb/fashion_rules.csv`: 200 frozen rules, 40 for each
-target category. The confirmatory operating point is fixed at 0.40 image / 0.60 CLIP text and
-0.75 CLIP / 0.25 rule evidence with up to five applicable rules. Validation grids are descriptive
-sensitivity analyses only.
+The sole active knowledge base is `data/kb/fashion_rules.csv`: 200 manually curated,
+source-grounded experimental rules, 40 for each target category. It is not a universal fashion
+ontology or independently certified professional guidance. The confirmatory operating point is
+fixed at 0.40 image / 0.60 CLIP text and 0.75 CLIP / 0.25 rule evidence with up to five applicable
+rules. Validation grids are descriptive sensitivity analyses only.
+
+The frozen results are deliberately mixed. Fused CLIP was the strongest tested conventional
+ranking pathway overall; evidence reranking did not improve aggregate recommendation metrics.
+The reranker did create an inspectable decision trace, and supplying that exact trace to the
+explanation generator increased trace-supported claim rate by 21.02 percentage points and
+full-KB-supported claim rate by 21.40 points in the final paired experiment.
 
 The run is governed by five approval-gated stages:
 
@@ -24,18 +32,22 @@ results.
 
 ## Active scope
 
-The tracked root tree contains only the final experiment, its frozen release artefacts, and the
-paper and thesis materials. Superseded development work and deferred human-validation material
-are retained locally in the ignored `OLD/` directory and are not part of the published pipeline.
+The active tree contains the final experiment, its frozen release artefacts, and the paper and
+thesis materials. A small `archive/` retains explicitly labelled superseded material for research
+provenance; archived files are not active results and are not part of the published pipeline.
 
 ## Repository guide
 
 - `src/` contains the package implementation.
 - `scripts/` contains the staged analysis and release utilities.
 - `data/` contains tracked metadata and the frozen knowledge base; generated datasets are ignored.
-- `artifacts/` and `reports/` contain the released final results.
+- `artifacts/release/` contains the immutable compact release; `artifacts/tables/` and
+  `artifacts/figures/` contain presentation copies and regenerated figures.
 - `paper/` contains the manuscript sources and submission-ready document files.
-- `thesis/` contains the thesis chapters and document files.
+- `thesis/` contains the edited chapter sources, consolidated thesis source, bibliography, and
+  rendered document files.
+- `FINAL_AUDIT_REPORT.md`, `SUBMISSION_CHECKLIST.md`, and `CORRECTION_LOG.md` record the final
+  submission audit and outstanding author/institutional actions.
 
 ## Reproduce the final run
 
@@ -66,16 +78,26 @@ following before execution.
 
 First validate the local setup without downloading data or generating outputs:
 
-```powershell
+```bash
 uv run python scripts/run_final_pipeline.py --check
 ```
 
-For a quick repository-only check, run `uv run pytest -q`.
+For repository-only verification, run:
+
+```bash
+uv run python scripts/audit_final_release.py
+uv run pytest -q
+uv run ruff check .
+```
+
+The release audit accepts either the exact recorded hashes or the corresponding Git-normalised LF
+form for five Windows-authored text artifacts; it reports which form was found. It then recomputes
+the recommendation metrics and checks the final explanation counts and trace-subset invariant.
 
 Then run all stages in order. This writes a new isolated reproduction package and never overwrites
 the committed final results:
 
-```powershell
+```bash
 uv run python scripts/run_final_pipeline.py --run
 ```
 

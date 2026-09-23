@@ -6,7 +6,7 @@
 
 ## Abstract
 
-Generative explanations can make a recommendation appear transparent without describing evidence that actually contributed to its selection. This paper evaluates a trace-grounded alternative for multimodal fashion recommendation. A hybrid system first ranks category-constrained candidates with frozen CLIP image--text representations and then reranks them using a curated expert-rule score. Crucially, the exact rules that contribute to the reranking score are stored before explanation generation. For each selected item, we compare paired No-RAG and Rule-RAG explanations: both conditions receive the same request, query-item and recommended-item text, while only Rule-RAG receives the exact stored rule trace. The final experiment contains 1,000 recommendation cases across five fashion categories and 500 evidence-eligible explanation cases. Three local generators produce 3,000 attempted explanations; Qwen 3.5 extracts atomic claims and Phi-4 verifies each claim against the trace, the record-specific full knowledge-base packet, common item-fact evidence, and observed citations. Evidence reranking changed the top recommendation in 26.5% of cases but did not improve conventional relevance over fused CLIP. In generator-specific complete-pair, case-clustered analysis, trace exposure increased trace-supported claim rate by 21.02 percentage points (95% CI 19.72--22.37) and full-KB-supported claim rate by 21.40 points (20.11--22.71). It also increased trace-supported claims per 100 words by 1.60 (1.48--1.72). The common-reference Unsupported Item-Fact Rate was inconclusive because only 53 complete pairs were eligible. The contribution is therefore not a claim that rule reranking improves recommendation accuracy or that generated prose is universally factual. It is an auditable experimental pattern: preserve evidence that participates in a symbolic ranking component, expose that exact artifact during generation, and evaluate generated claims against explicit source boundaries.
+Generative explanations can make a recommendation appear transparent without describing evidence that actually contributed to its selection. This paper evaluates a trace-grounded alternative for multimodal fashion recommendation. A hybrid system first ranks category-constrained candidates with frozen CLIP image--text representations and then reranks them using a curated, source-grounded fashion-rule score. Crucially, the exact rules that contribute to the reranking score are stored before explanation generation. For each selected item, we compare paired No-RAG and Rule-RAG explanations: both conditions receive the same request, query-item and recommended-item text, while only Rule-RAG receives the exact stored rule trace. The final experiment contains 1,000 recommendation cases across five fashion categories and 500 evidence-eligible explanation cases. Three local generators produce 3,000 attempted explanations; Qwen 3.5 extracts atomic claims and Phi-4 verifies each claim against the trace, the record-specific full knowledge-base packet, common item-fact evidence, and observed citations. Evidence reranking changed the top recommendation in 26.5% of cases but did not improve conventional relevance over fused CLIP. In generator-specific complete-pair, case-clustered analysis, trace exposure increased trace-supported claim rate by 21.02 percentage points (95% CI 19.72--22.37) and full-KB-supported claim rate by 21.40 points (20.11--22.71). It also increased trace-supported claims per 100 words by 1.60 (1.48--1.72). The common-reference Unsupported Item-Fact Rate was inconclusive because only 53 complete pairs were eligible. The contribution is therefore not a claim that rule reranking improves recommendation accuracy or that generated prose is universally factual. It is an auditable experimental pattern: preserve evidence that participates in a symbolic ranking component, expose that exact artifact during generation, and evaluate generated claims against explicit source boundaries.
 
 **Keywords:** explainable recommendation; multimodal retrieval; retrieval-augmented generation; faithfulness; fashion compatibility; claim verification
 
@@ -18,11 +18,11 @@ Ranking, however, is only one side of an intelligent information system. A user 
 
 Retrieval-augmented generation (RAG) can ground a response in external material [13], but a post-hoc retrieval set is not necessarily decision evidence. If a recommender retrieves rules only after it has selected an item, those rules can support a persuasive story without demonstrating that they influenced the selection. Citation markers do not solve this problem by themselves: a citation is meaningful only if the cited source entails the claim to which it is attached [14,15].
 
-We address this problem with a deliberately narrow intervention. Our hybrid recommender combines CLIP image and text compatibility with an expert-rule evidence score. For every query--candidate pair, the system records the retrieved rule IDs, similarities, reliability weights, bonuses, ordering, and weighted contributions. The top-ranked reranked candidate is then locked. The same exact rule trace that participated in the symbolic reranking component is supplied to the Rule-RAG explanation condition; it is hidden from the paired No-RAG condition. Both conditions explain the same locked recommendation with the same common context, generator, decoding configuration, and at-most-75-word instruction.
+We address this problem with a deliberately narrow intervention. Our hybrid recommender combines CLIP image and text compatibility with a curated fashion-rule evidence score. For every query--candidate pair, the system records the retained rule IDs, similarities, ordering, contributions, and final evidence score. The top-ranked reranked candidate is then locked. The same exact rule trace that participated in the symbolic reranking component is supplied to the Rule-RAG explanation condition; it is hidden from the paired No-RAG condition. Both conditions explain the same locked recommendation with the same common context, generator, decoding configuration, and 45--75-word instruction.
 
 This design makes four contributions:
 
-- An end-to-end evidence-aware recommender in which an inspectable expert-rule trace is produced during reranking rather than reconstructed after selection.
+- An end-to-end evidence-aware recommender in which an inspectable fashion-rule trace is produced during reranking rather than reconstructed after selection.
 - A paired explanation intervention that holds the recommendation fixed and isolates access to the stored trace.
 - A claim-level evaluation protocol separating trace support, full-KB support, common-reference item-fact support, and citation entailment.
 - A frozen, reproducible five-stage release with leakage controls, validation-only configuration selection, complete-pair analysis, case-clustered bootstrap inference, and transparent failure accounting.
@@ -41,13 +41,13 @@ The present paper does not propose a new foundation representation or claim stat
 
 Explainable recommender systems use features, reviews, rules, graphs, paths, and natural-language rationales to communicate recommendations [6--9]. Their user-facing value is clear, but a readable rationale does not necessarily establish a relationship with the computation that selected an item. The faithfulness literature cautions that explanations can appear convincing without being causally or evidentially tied to the model behaviour they describe [10--12].
 
-Our claim is bounded to a hybrid system. The stored trace is not presented as a complete explanation of CLIP's latent computation. It is the exact account of the expert-rule component that numerically participates in reranking. This distinction permits a precise test: whether showing that recorded artifact changes the support of generated claims relative to the same artifact.
+Our claim is bounded to a hybrid system. The stored trace is not presented as a complete explanation of CLIP's latent computation. It is the exact account of the fashion-rule component that numerically participates in reranking. This distinction permits a precise test: whether showing that recorded artifact changes the support of generated claims relative to the same artifact.
 
 ### 2.3 RAG, citations, and claim-level assessment
 
 RAG improves access to external information during generation [13], while citation-aware generation aims to make source use inspectable [14,15]. Yet source presence, citation syntax, and claim entailment are different properties. A rule may be displayed but not used; it may be cited but not support the surrounding sentence; and a generic styling rule may support a relational rationale without proving an item-specific attribute.
 
-Accordingly, our evaluation uses four evidence boundaries. `trace_support` asks whether the exact five-rule reranking trace supports a claim. `full_kb_support` asks whether a record-specific packet from the final 200-rule KB supports it. `common_reference_support` is restricted to eligible concrete item-fact claims shared by both conditions. `citation_entailment` evaluates a Rule-RAG citation as a claim--rule relation rather than as a marker. This source-specific design follows the principle that evaluators should measure the particular property an explanation claims to provide, rather than generic fluency alone.
+Accordingly, our evaluation uses four evidence boundaries. `trace_support` asks whether the complete retained reranking trace supports a claim. `full_kb_support` asks whether a record-specific packet from the final 200-rule KB supports it. `common_reference_support` is restricted to eligible concrete item-fact claims shared by both conditions. `citation_entailment` evaluates a Rule-RAG citation as a claim--rule relation rather than as a marker. This source-specific design follows the principle that evaluators should measure the particular property an explanation claims to provide, rather than generic fluency alone.
 
 ## 3 Method
 
@@ -59,19 +59,19 @@ The study uses the pinned `Marqo/polyvore` dataset revision `8c782ee447faf2d2a04
 
 ### 3.2 Multimodal ranking and evidence-aware reranking
 
-MiniLM encodes product text, while `openai/clip-vit-base-patch32` supplies frozen image and text embeddings. All vectors are L2-normalised. For query (q), the fused CLIP representation is
+MiniLM encodes product text, while `openai/clip-vit-base-patch32` supplies frozen image and text embeddings. All vectors are L2-normalised. For query \(q\), the fused CLIP representation is
 
 \[
 f_q=\frac{\alpha v_q+(1-\alpha)t_q}{\lVert\alpha v_q+(1-\alpha)t_q\rVert_2}, \qquad \alpha=0.40,
 \tag{1}
 \]
 
-and candidate compatibility is (s_{\mathrm{CLIP}}(q,i)=f_q^{\top}f_i). The image/text fusion weight was fixed on validation data only.
+and candidate compatibility is \(s_{\mathrm{CLIP}}(q,i)=f_q^{\top}f_i\). The image/text fusion weight was fixed on validation data only.
 
-The final KB, `fashion_rules.csv`, contains 200 curated styling rules: 40 for each target category. Rules express relational styling knowledge--for example, compatibility of formality, colour coordination, or layering--rather than verified attributes of a particular product. For each query--candidate pair, rules are category-filtered and scored using semantic similarity, an applicable query-group bonus, and a reliability weight. The retained top five rules define the evidence score:
+The final KB, `fashion_rules.csv`, contains 200 manually curated, source-grounded styling rules: 40 for each target category. Rules express relational styling knowledge--for example, compatibility of formality, colour coordination, or layering--rather than verified attributes of a particular product. For each query--candidate pair, rules pass explicit applicability gates and are scored by cosine similarity using `qwen3-embedding:0.6b`. Up to five eligible rules are retained. Their maximum and mean similarities define the evidence score:
 
 \[
-s_E(q,i)=\frac{1}{5}\sum_{r\in R_5(q,i)}u(q,i,r).
+s_E(q,i)=0.7\max_{r\in R_k(q,i)}u(q,i,r)+0.3\frac{1}{\lvert R_k(q,i)\rvert}\sum_{r\in R_k(q,i)}u(q,i,r).
 \tag{2}
 \]
 
@@ -82,11 +82,11 @@ s_R(q,i)=0.75\,\widetilde{s}_{\mathrm{CLIP}}(q,i)+0.25\,\widetilde{s}_{E}(q,i).
 \tag{3}
 \]
 
-The top-ranked reranked item is locked before any explanation call. Its stored trace includes the rules, rule IDs, contributions, retrieval ranks, weights, and the final evidence score. Thus, the Rule-RAG evidence is not a later retrieval or a manually written explanation.
+The top-ranked reranked item is locked before any explanation call. Its stored trace includes the rules, rule IDs, contributions, retrieval ranks, recorded equal weights and zero bonuses, and the final evidence score. Thus, the Rule-RAG evidence is not a later retrieval or a manually written explanation.
 
 ### 3.3 Paired explanation intervention
 
-Five hundred evidence-eligible locked recommendations, 100 per category, form the explanation set. Let (A_q) denote the common context for case (q): the request plus query and locked-item identities, categories, and product text. Let (B_q) denote the exact stored reranking trace. For generator (g), the two outputs are
+Five hundred evidence-eligible locked recommendations, 100 per category, form the explanation set. Let \(A_q\) denote the common context for case \(q\): the request plus query and locked-item identities, categories, and product text. Let \(B_q\) denote the exact stored reranking trace. For generator \(g\), the two outputs are
 
 \[
 E^{\mathrm{NoRAG}}_{qg}=G_g(A_q), \qquad E^{\mathrm{RuleRAG}}_{qg}=G_g(A_q,B_q).
@@ -187,7 +187,7 @@ Finally, the intervention includes both trace availability and the associated gr
 
 This paper presents a reproducible approach to evidence-constrained multimodal fashion recommendation in which a symbolic rule trace participates in reranking and is then reused for explanation. The final experiment demonstrates a meaningful trade-off: evidence reranking changes decisions but does not improve conventional controlled-pool relevance over fused CLIP; trace exposure substantially improves trace and full-KB claim support in paired explanations.
 
-The appropriate conclusion is specific. Within the frozen dataset, models, KB, and automated evaluator, showing the exact five-rule reranking trace produces explanations with more claims supported by that trace and by the associated full-KB packet. It does not prove universal factual correctness, human preference superiority, complete neural faithfulness, or production-scale recommendation performance. By retaining the trace, separating evidence boundaries, preserving failures, and analysing complete pairs at the case level, the study offers a reviewer-auditable pattern for evaluating evidence-grounded explanations in recommender systems.
+The appropriate conclusion is specific. Within the frozen dataset, models, KB, and automated evaluator, showing the complete retained reranking trace produces explanations with more claims supported by that trace and by the associated full-KB packet. It does not prove universal factual correctness, human preference superiority, complete neural faithfulness, or production-scale recommendation performance. By retaining the trace, separating evidence boundaries, preserving failures, and analysing complete pairs at the case level, the study offers a reviewer-auditable pattern for evaluating evidence-grounded explanations in recommender systems.
 
 ## Declarations
 
